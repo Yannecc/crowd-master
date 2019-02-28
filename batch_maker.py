@@ -366,7 +366,7 @@ class StimMaker:
         for n in range(batchSize):
 
             offset = random.randint(0, 1)
-            batchImages[n, :, :] = self.drawStim(vernier_ext, shapeMatrix=configMatrix, fixed_position=fixed_position, offset=offset) + numpy.random.normal(0, noiseLevel, size=self.imSize)
+            batchImages[n, :, :] = self.drawStim(vernier_ext, shapeMatrix=configMatrix, fixed_position=fixed_position, offset=offset)
             if normalize:
                 batchImages[n, :, :] = (batchImages[n, :, :] - numpy.mean(batchImages[n, :, :])) / numpy.std(batchImages[n, :, :])
 
@@ -380,6 +380,8 @@ class StimMaker:
                     batchImages[n, :, :] = tempImage
 
         batchImages = numpy.expand_dims(batchImages, -1)  # need to a a fourth dimension for tensorflow
+        batchImages = numpy.tile(batchImages, (1, 1, 1, 3))
+        batchImages += numpy.random.normal(0, noiseLevel, size=(batchImages.shape))
 
         return batchImages, vernierLabels
 
@@ -397,4 +399,4 @@ if __name__ == "__main__":
 
     rufus = StimMaker(imgSize, shapeSize, barWidth)
     # rufus.plotStim(1, [[1, 2, 3], [4, 5, 6], [6, 7, 0]])
-    rufus.showBatch(9, shapes, noiseLevel=0., normalize=False, fixed_position=None, random_size=False)
+    rufus.showBatch(9, shapes, noiseLevel=0.1, normalize=False, fixed_position=None, random_size=False)
