@@ -6,6 +6,7 @@ import numpy, random, matplotlib.pyplot as plt
 from skimage import draw
 from scipy.ndimage import zoom
 from datetime import datetime
+import math
 
 
 random_pixels = 0  # stimulus pixels are drawn from random.uniform(1-random_pixels,1+random_pixels). So use 0 for deterministic stimuli.
@@ -324,7 +325,7 @@ class StimMaker:
                 if flag > 15:
                     print("problem in finding space for the extra vernier")
 
-        image[x: x + ver_size, y: y + ver_size] = ver_patch
+            image[x: x + ver_size, y: y + ver_size] = ver_patch
 
 
 
@@ -345,10 +346,10 @@ class StimMaker:
 
 
 
-    def showBatch(self, batchSize, configMatrix, noiseLevel=0.0, normalize=False, fixed_position=None, random_size=False):
 
+    def show_Batch(self, batchSize, ratios, noiseLevel=0.0, normalize=False, fixed_position=None):
         # input a configuration to display
-        batchImages, batchLabels = self.makeBatch(batchSize, configMatrix, vernier_ext=True, noiseLevel=noiseLevel, normalize=normalize, fixed_position=fixed_position, random_size=random_size)
+        batchImages, batchLabels = self.generate_Batch(batchSize, ratios, noiseLevel=noiseLevel, normalize=normalize, fixed_position=fixed_position)
 
         for n in range(batchSize):
             plt.figure()
@@ -358,27 +359,82 @@ class StimMaker:
             plt.show()
 
 
-    def makeBatch(self, batchSize, configMatrix, vernier_ext, noiseLevel=0.0, normalize=False, fixed_position=None, random_size=False):
 
+    #def makeBatch(self, batchSize, configMatrix, vernier_ext, noiseLevel=0.0, normalize=False, fixed_position=None, random_size=False):
+
+        #batchImages = numpy.ndarray(shape=(batchSize, self.imSize[0], self.imSize[1]), dtype=numpy.float32)
+        #vernierLabels = numpy.zeros(batchSize, dtype=numpy.float32)
+        #
+        # for n in range(batchSize):
+        #
+        #     offset = random.randint(0, 1)
+        #     batchImages[n, :, :] = self.drawStim(vernier_ext, shapeMatrix=configMatrix, fixed_position=fixed_position, offset=offset)
+        #     if normalize:
+        #         batchImages[n, :, :] = (batchImages[n, :, :] - numpy.mean(batchImages[n, :, :])) / numpy.std(batchImages[n, :, :])
+        #
+        #     vernierLabels[n] = -offset + 1
+        #
+        #     if random_size:
+        #         zoom_factor = random.uniform(0.8, 1.2)
+        #         tempImage = clipped_zoom(batchImages[n, :, :], zoom_factor)
+        #         tempImage[tempImage == 0] = -numpy.mean(tempImage)  # because when using random_sizes, small images get padded with 0 but the background may be <= because of normalization
+        #         if tempImage.shape == batchImages[n, :, :].shape:
+        #             batchImages[n, :, :] = tempImage
+        #
+        # batchImages = numpy.expand_dims(batchImages, -1)  # need to a a fourth dimension for tensorflow
+        # batchImages = numpy.tile(batchImages, (1, 1, 1, 3))
+        # batchImages += numpy.random.normal(0, noiseLevel, size=(batchImages.shape))
+        #
+        # return batchImages, vernierLabels
+
+
+    def generate_Batch(self, batchSize, ratios, noiseLevel=0.0, normalize=False, fixed_position=None):
+
+        # ratios : 0 - vernier alone; 1- shapes alone; 2- Vernier ext; 3-vernier inside shape
+        # in case ratio didn't fit required size, standard output
+        if len(ratios)!= 4:
+            ratios = [.25, .25, .25, .25]
+
+
+        #  Normalize ratios by batchSize, then manage rounding errors with while
+        ratios = [int(float(i)*batchSize / sum(ratios)) for i in ratios]
+
+        while sum(ratios) < batchSize:
+            ratios[numpy.random.randint(4)] += 1
+
+        # Define attributes of all 3 groups (could be dictionnary)
+        v_map = [[True, False], [False, False], [True, False], [False, True]]
+        shape_map = [[],None, None, None]
+
+
+        # Define output
         batchImages = numpy.ndarray(shape=(batchSize, self.imSize[0], self.imSize[1]), dtype=numpy.float32)
         vernierLabels = numpy.zeros(batchSize, dtype=numpy.float32)
 
-        for n in range(batchSize):
 
-            offset = random.randint(0, 1)
-            batchImages[n, :, :] = self.drawStim(vernier_ext, shapeMatrix=configMatrix, fixed_position=fixed_position, offset=offset)
-            if normalize:
-                batchImages[n, :, :] = (batchImages[n, :, :] - numpy.mean(batchImages[n, :, :])) / numpy.std(batchImages[n, :, :])
+        # generate images, master loop
+        n_precedent=0
+        for grp in range(4):
+            N = ratios[grp]
 
-            vernierLabels[n] = -offset + 1
+            for n in range(N):
+                n_true = n_precedent + n
+                offset = random.randint(0, 1)
+                batchImages[n_true, :, :] = self.drawStim(vernier_ext=v_map[grp][0], shapeMatrix=shape_map[grp], vernier_in=v_map[grp][1],
+                                                     fixed_position=fixed_position, offset=offset)
+                if normalize:
+                    batchImages[n_true, :, :] = (batchImages[n, :, :] - numpy.mean(batchImages[n, :, :])) / numpy.std(
+                        batchImages[n_true, :, :])
 
-            if random_size:
-                zoom_factor = random.uniform(0.8, 1.2)
-                tempImage = clipped_zoom(batchImages[n, :, :], zoom_factor)
-                tempImage[tempImage == 0] = -numpy.mean(tempImage)  # because when using random_sizes, small images get padded with 0 but the background may be <= because of normalization
-                if tempImage.shape == batchImages[n, :, :].shape:
-                    batchImages[n, :, :] = tempImage
+                if grp != 1:
+                    vernierLabels[n_true] = -offset + 1
+                else:
+                    vernierLabels[n_true] = -1
 
+            n_precedent += N
+
+
+        # Make it suitable for alexnet: RGB and noise added
         batchImages = numpy.expand_dims(batchImages, -1)  # need to a a fourth dimension for tensorflow
         batchImages = numpy.tile(batchImages, (1, 1, 1, 3))
         batchImages += numpy.random.normal(0, noiseLevel, size=(batchImages.shape))
@@ -390,13 +446,19 @@ class StimMaker:
 
 
 
+
 if __name__ == "__main__":
     #
     imgSize = (227, 227)
     shapeSize = 18
     barWidth = 1
-    shapes = None#[[2, 2, 3, 2, 4]]
-
     rufus = StimMaker(imgSize, shapeSize, barWidth)
+
+
     # rufus.plotStim(1, [[1, 2, 3], [4, 5, 6], [6, 7, 0]])
-    rufus.showBatch(9, shapes, noiseLevel=0.1, normalize=False, fixed_position=None, random_size=False)
+    #rufus.showBatch(9, shapes, noiseLevel=0.1, normalize=False, fixed_position=None, random_size=False)
+
+
+    ratios = [1, 1, 1, 1] #ratios : 0 - vernier alone; 1- shapes alone; 2- Vernier ext; 3-vernier inside shape
+    batchSize = 14
+    rufus.show_Batch(batchSize,ratios, noiseLevel=0.1, normalize=False, fixed_position=None)

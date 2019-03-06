@@ -329,6 +329,7 @@ def main():
         master_training_op = [train_op1, train_op2, train_op3, train_op4, train_op5, train_op6, train_op7, train_op8, train_op_prob, update_batch_norm_ops]
 
         input_maker = StimMaker(imSize=(227,227), shapeSize=19, barWidth=2)
+        training_ratios = [0, 0, 0, 1]  # 0-VernierAlone/1-ShapesAlone/2-VernierExt/3-VernierInside
 
         with tf.Session() as sess:
 
@@ -348,7 +349,7 @@ def main():
                 for iteration in range(n_batches):
 
                     # get data in the batches
-                    batch_data, batch_labels = input_maker.makeBatch(batch_size, None, True, noiseLevel=noise_level)
+                    batch_data, batch_labels = input_maker.generate_Batch(batch_size, training_ratios, noiseLevel=noise_level, normalize=False, fixed_position=None)
 
                     if iteration % 50 == 0:
 
@@ -390,6 +391,7 @@ def main():
         summary = tf.summary.merge_all()
 
         input_maker = StimMaker(imSize=(227, 227), shapeSize=19, barWidth=2)
+        testing_ratios = [1, 1, 1, 1]  # 0-VernierAlone/1-ShapesAlone/2-VernierExt/3-VernierInside
 
         with tf.Session() as sess:
 
@@ -407,7 +409,8 @@ def main():
             for iteration in range(n_batches):
 
                 # get data in the batches
-                batch_data, batch_labels = input_maker.makeBatch(batch_size, None, True, noiseLevel=noise_level)
+                batch_data, batch_labels = input_maker.generate_Batch(batch_size, testing_ratios, noiseLevel=noise_level, normalize=False, fixed_position=None)
+
 
                 if iteration % 5 == 0:
 
