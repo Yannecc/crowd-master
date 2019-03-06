@@ -24,7 +24,7 @@ def main():
     N_HIDDEN = 512
     TRAINING = True
     batch_size = 64
-    total_n_samples = 40000*batch_size
+    total_n_samples = 150000*batch_size
     noise_level = .1
 
     if N_HIDDEN is None:
@@ -35,7 +35,7 @@ def main():
         LOGDIR = MODEL_NAME + '_logdir/version_' + str(VERSION) + '_hidden_' + str(N_HIDDEN)
     checkpoint_path = LOGDIR + '/' + MODEL_NAME + '_hidden_' + str(N_HIDDEN) + "_model.ckpt"
     restore_checkpoint = True
-    continue_training_from_checkpoint = False
+    continue_training_from_checkpoint = True
 
     if not os.path.exists(LOGDIR):
         os.makedirs(LOGDIR)
@@ -337,19 +337,20 @@ def main():
 
             if restore_checkpoint and tf.train.checkpoint_exists(checkpoint_path):
                 saver.restore(sess, checkpoint_path)
-                print('Checkpoint found, will not bother training.')
+                print('Checkpoint found.')
+            else:
+                print('Training network from scratch')
+                init.run()
             if (restore_checkpoint and tf.train.checkpoint_exists(
                     checkpoint_path) and continue_training_from_checkpoint) \
                     or not restore_checkpoint or not tf.train.checkpoint_exists(checkpoint_path):
-
-                init.run()
 
                 for iteration in range(n_batches):
 
                     # get data in the batches
                     batch_data, batch_labels = input_maker.makeBatch(batch_size, None, True, noiseLevel=noise_level)
 
-                    if iteration % 5 == 0:
+                    if iteration % 50 == 0:
 
                         # Run the training operation, measure the losses and write summary:
                         _, summ = sess.run(
