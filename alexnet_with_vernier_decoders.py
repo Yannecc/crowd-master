@@ -18,14 +18,17 @@ def main():
     ####################################################################################################################
 
 
-    MODEL_ID = 0
-    VERSION = 0
+    MODEL_ID = 1
+    VERSION = 3
     STIM = 'vernier_and_shapes'
+    training_ratios = [0, 0, 1, 0]  # 0-VernierAlone/1-ShapesAlone/2-VernierExt/3-VernierInside
     N_HIDDEN = 512
     TRAINING = True
+    save_steps = 1000  # save the model after each save_steps
     batch_size = 64
     total_n_samples = 150000*batch_size
     noise_level = .1
+    lr = 1e-5  # learning rate
 
     if N_HIDDEN is None:
         MODEL_NAME = 'crowd-master' + str(MODEL_ID)
@@ -93,7 +96,7 @@ def main():
         classifier1 = vernier_classifier(conv1, is_training, N_HIDDEN, name='classifier1')
         x_entropy1 = vernier_x_entropy(classifier1,y)
         correct_mean1 = vernier_correct_mean(tf.argmax(classifier1, axis=1), y) # match correct prediction to each entry in y
-        train_op1 = tf.train.AdamOptimizer(learning_rate=0.000001).minimize(x_entropy1,
+        train_op1 = tf.train.AdamOptimizer(learning_rate=lr).minimize(x_entropy1,
                                                        var_list=tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='decode_vernier1'),
                                                        name="training_op")
 
@@ -140,7 +143,7 @@ def main():
         classifier2 = vernier_classifier(conv2, is_training, N_HIDDEN, name='classifier2')
         x_entropy2 = vernier_x_entropy(classifier2,y)
         correct_mean2 = vernier_correct_mean(tf.argmax(classifier2, axis=1), y) # match correct prediction to each entry in y
-        train_op2 = tf.train.AdamOptimizer(learning_rate=0.000001).minimize(x_entropy2,
+        train_op2 = tf.train.AdamOptimizer(learning_rate=lr).minimize(x_entropy2,
                                                        var_list=tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='decode_vernier2'),
                                                        name="training_op")
 
@@ -187,7 +190,7 @@ def main():
         classifier3 = vernier_classifier(conv3, is_training, N_HIDDEN, name='classifier3')
         x_entropy3 = vernier_x_entropy(classifier3,y)
         correct_mean3 = vernier_correct_mean(tf.argmax(classifier3, axis=1), y)  # match correct prediction to each entry in y
-        train_op3 = tf.train.AdamOptimizer(learning_rate=0.000001).minimize(x_entropy3,
+        train_op3 = tf.train.AdamOptimizer(learning_rate=lr).minimize(x_entropy3,
                                                        var_list=tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='decode_vernier3'),
                                                        name="training_op")
 
@@ -211,7 +214,7 @@ def main():
         classifier4 = vernier_classifier(conv4, is_training, N_HIDDEN, name='classifier4')
         x_entropy4 = vernier_x_entropy(classifier4,y)
         correct_mean4 = vernier_correct_mean(tf.argmax(classifier4, axis=1), y)  # match correct prediction to each entry in y
-        train_op4 = tf.train.AdamOptimizer(learning_rate=0.000001).minimize(x_entropy4,
+        train_op4 = tf.train.AdamOptimizer(learning_rate=lr).minimize(x_entropy4,
                                                        var_list=tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='decode_vernier4'),
                                                        name="training_op")
 
@@ -235,7 +238,7 @@ def main():
         classifier5 = vernier_classifier(conv5, is_training, N_HIDDEN, name='classifier5')
         x_entropy5 = vernier_x_entropy(classifier5,y)
         correct_mean5 = vernier_correct_mean(tf.argmax(classifier5, axis=1), y)  # match correct prediction to each entry in y
-        train_op5 = tf.train.AdamOptimizer(learning_rate=0.000001).minimize(x_entropy5,
+        train_op5 = tf.train.AdamOptimizer(learning_rate=lr).minimize(x_entropy5,
                                                        var_list=tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='decode_vernier5'),
                                                        name="training_op")
 
@@ -262,7 +265,7 @@ def main():
         classifier6 = vernier_classifier(fc6, is_training, N_HIDDEN, name='classifier6')
         x_entropy6 = vernier_x_entropy(classifier6,y)
         correct_mean6 = vernier_correct_mean(tf.argmax(classifier6, axis=1), y)  # match correct prediction to each entry in y
-        train_op6 = tf.train.AdamOptimizer(learning_rate=0.000001).minimize(x_entropy6,
+        train_op6 = tf.train.AdamOptimizer(learning_rate=lr).minimize(x_entropy6,
                                                        var_list=tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='decode_vernier6'),
                                                        name="training_op")
 
@@ -279,7 +282,7 @@ def main():
         classifier7 = vernier_classifier(fc7, is_training, N_HIDDEN, name='classifier7')
         x_entropy7 = vernier_x_entropy(classifier7,y)
         correct_mean7 = vernier_correct_mean(tf.argmax(classifier7, axis=1), y)  # match correct prediction to each entry in y
-        train_op7 = tf.train.AdamOptimizer(learning_rate=0.000001).minimize(x_entropy7,
+        train_op7 = tf.train.AdamOptimizer(learning_rate=lr).minimize(x_entropy7,
                                                        var_list=tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='decode_vernier7'),
                                                        name="training_op")
 
@@ -295,7 +298,7 @@ def main():
         classifier8 = vernier_classifier(fc8, is_training, N_HIDDEN, name='classifier8')
         x_entropy8 = vernier_x_entropy(classifier8,y)
         correct_mean8 = vernier_correct_mean(tf.argmax(classifier8, axis=1), y)  # match correct prediction to each entry in y
-        train_op8 = tf.train.AdamOptimizer(learning_rate=0.000001).minimize(x_entropy8,
+        train_op8 = tf.train.AdamOptimizer(learning_rate=lr).minimize(x_entropy8,
                                                        var_list=tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='decode_vernier8'),
                                                        name="training_op")
 
@@ -309,7 +312,7 @@ def main():
         classifier_prob = vernier_classifier(prob, is_training, N_HIDDEN, name='classifier_prob')
         x_entropy_prob = vernier_x_entropy(classifier_prob,y)
         correct_mean_prob = vernier_correct_mean(tf.argmax(classifier_prob, axis=1), y)  # match correct prediction to each entry in y
-        train_op_prob = tf.train.AdamOptimizer(learning_rate=0.000001).minimize(x_entropy_prob,
+        train_op_prob = tf.train.AdamOptimizer(learning_rate=lr).minimize(x_entropy_prob,
                                                            var_list=tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='decode_vernier_prob'),
                                                            name="training_op")
 
@@ -329,7 +332,6 @@ def main():
         master_training_op = [train_op1, train_op2, train_op3, train_op4, train_op5, train_op6, train_op7, train_op8, train_op_prob, update_batch_norm_ops]
 
         input_maker = StimMaker(imSize=(227,227), shapeSize=19, barWidth=2)
-        training_ratios = [0, 0, 0, 1]  # 0-VernierAlone/1-ShapesAlone/2-VernierExt/3-VernierInside
 
         with tf.Session() as sess:
 
@@ -351,7 +353,7 @@ def main():
                     # get data in the batches
                     batch_data, batch_labels = input_maker.generate_Batch(batch_size, training_ratios, noiseLevel=noise_level, normalize=False, fixed_position=None)
 
-                    if iteration % 50 == 0:
+                    if iteration % 100 == 0 and iteration % 1000 != 0:
 
                         # Run the training operation, measure the losses and write summary:
                         _, summ = sess.run(
@@ -360,6 +362,18 @@ def main():
                                        y: batch_labels,
                                        is_training: TRAINING})
                         writer.add_summary(summ, iteration)
+
+                    elif iteration % 1000 == 0 and iteration != 0:
+
+                        # Run the training operation, measure the losses, write summary and save network:
+                        _, summ = sess.run(
+                            [master_training_op, summary],
+                            feed_dict={x: batch_data,
+                                       y: batch_labels,
+                                       is_training: TRAINING})
+                        writer.add_summary(summ, iteration)
+
+                        save_path = saver.save(sess, checkpoint_path)
 
                     else:
 
