@@ -19,16 +19,16 @@ def main():
 
 
     MODEL_ID = 1
-    VERSION = 3
+    VERSION = 0
     STIM = 'vernier_and_shapes'
     training_ratios = [0, 0, 1, 0]  # 0-VernierAlone/1-ShapesAlone/2-VernierExt/3-VernierInside
     N_HIDDEN = 512
     TRAINING = True
     save_steps = 1000  # save the model after each save_steps
     batch_size = 64
-    total_n_samples = 150000*batch_size
+    total_n_samples = 100000*batch_size
     noise_level = .1
-    lr = 1e-5  # learning rate
+    lr = 1e-6  # learning rate
 
     if N_HIDDEN is None:
         MODEL_NAME = 'crowd-master' + str(MODEL_ID)
