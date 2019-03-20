@@ -11,6 +11,21 @@ import math
 
 random_pixels = 0  # stimulus pixels are drawn from random.uniform(1-random_pixels,1+random_pixels). So use 0 for deterministic stimuli.
 
+def shapesgen(max, emptyvect=True):
+    if max>7:
+        return
+
+    if emptyvect:
+        s = [[]]
+    else:
+        s = []
+    for i in range(1,max+1):
+        s += [[i], [i,i,i], [i,i,i,i,i]]
+        for j in range(1,max+1):
+            if j != i:
+                s += [[i,j,i,j,i]]
+
+    return s
 
 def clipped_zoom(img, zoom_factor, **kwargs):
 
@@ -277,8 +292,8 @@ class StimMaker:
         if len(shapeMatrix.shape) < 2:
             shapeMatrix = numpy.expand_dims(shapeMatrix, axis=0)
 
-        if shapeMatrix.all() == None:  # this means we want only a vernier
-            patch = numpy.zeros((self.shapeSize+3, self.shapeSize+3))
+        if shapeMatrix.size == 0:  # this means we want only a vernier
+            patch = numpy.zeros((self.shapeSize, self.shapeSize))
         else:
             patch = numpy.zeros((shapeMatrix.shape[0]*self.shapeSize + (shapeMatrix.shape[0]-1)*critDist + 1,
                                  shapeMatrix.shape[1]*self.shapeSize + (shapeMatrix.shape[1]-1)*critDist + 1))
@@ -295,7 +310,7 @@ class StimMaker:
 
             firstRow = int((patch.shape[0]-self.shapeSize)/2) # + 1  # small adjustments may be needed depending on precise image size
             firstCol = int((patch.shape[1]-self.shapeSize)/2) # + 1
-            patch[firstRow:(firstRow+self.shapeSize), firstCol:firstCol+self.shapeSize] = self.drawVernier(offset, offset_size)
+            patch[firstRow:(firstRow+self.shapeSize), firstCol:firstCol+self.shapeSize] += self.drawVernier(offset, offset_size)
             patch[patch > 1.0] = 1.0
 
         if fixed_position is None:
@@ -409,7 +424,7 @@ class StimMaker:
 
         # Define attributes of all 3 groups (could be dictionnary)
         v_map = ((True, False), (False, False), (True, False),(False, True))
-        shape_map = ([],None, None, shapeMatrix)
+        shape_map = ([], None, None, shapeMatrix)
 
 
         # Define output
@@ -457,12 +472,13 @@ if __name__ == "__main__":
     barWidth = 1
     rufus = StimMaker(imgSize, shapeSize, barWidth)
 
+    print(shapesgen(5, False))
 
     # rufus.plotStim(1, [[1, 2, 3], [4, 5, 6], [6, 7, 0]])
     #rufus.showBatch(9, shapes, noiseLevel=0.1, normalize=False, fixed_position=None, random_size=False)
 
 
     ratios = [0,0,0,1] #ratios : 0 - vernier alone; 1- shapes alone; 2- Vernier ext; 3-vernier inside shape
-    batchSize = 6
+    batchSize = 4
     matrix = []
     rufus.show_Batch(batchSize,ratios, noiseLevel=0.1, normalize=False, fixed_position=None, shapeMatrix = matrix)

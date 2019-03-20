@@ -2,7 +2,7 @@
 
 import tensorflow as tf
 from makePatches import createPatches
-from batch_maker import StimMaker
+from batch_maker import StimMaker, shapesgen
 import numpy as np
 import os
 import matplotlib
@@ -399,10 +399,7 @@ def main():
     ####################################################################################################################
     # Testing
     ####################################################################################################################
-    SHAPES = [[1], [2], [3], [1, 1, 1], [2, 2, 2], [3, 3, 3], [1, 2, 1], [1, 3, 1], [2, 1, 2], [2, 3, 2], [3, 1, 3],
-              [3, 2, 3],
-              [1, 1, 1, 1, 1], [2, 2, 2, 2, 2], [3, 3, 3, 3, 3], [1, 2, 1, 2, 1], [1, 3, 1, 3, 1], [2, 1, 2, 1, 2],
-              [2, 3, 2, 3, 2], [3, 1, 3, 1, 3], [3, 2, 3, 2, 3]]
+    SHAPES = shapesgen(5)
     N_exp = len(SHAPES)
     results = np.zeros((N_exp, 9))
     testing_ratios = [0, 0, 0, 1]
@@ -469,6 +466,7 @@ def main():
             results[i, :] = percent_correct
         print(results)
         np.save(LOGDIR + '/' + STIM + '_results', results)
+        np.save(LOGDIR + '/' + STIM + '_SHAPES', SHAPES)
 
 
     ####################################################################################################################
