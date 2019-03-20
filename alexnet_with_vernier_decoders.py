@@ -416,7 +416,8 @@ def main():
 
             with tf.Session() as sess:
 
-                print('Testing...')
+                print('\rTesting...')
+                print('\rshapematrix ={}'.format(str(shapeMatrix)))
                 writer = tf.summary.FileWriter(LOGDIR+'/'+STIM+'_testing'+str(shapeMatrix), sess.graph)
                 saver.restore(sess, checkpoint_path)
 
