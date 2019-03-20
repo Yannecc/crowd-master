@@ -446,10 +446,8 @@ class StimMaker:
                     img = (img - numpy.mean(img)) / numpy.std(img)
 
                 batchImages[n_true, :, :] = img
-                if grp != 1:
-                    vernierLabels[n_true] = -offset + 1
-                else:
-                    vernierLabels[n_true] = -1
+            vernierLabels[n_true] = -offset + 1
+
 
             n_precedent += N
 
