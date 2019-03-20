@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-i = 1 #base shape
+i = 5 #base shape
 max = 5
 
 crowdeds = [[i], [i, i, i], [i, i, i, i, i]]
@@ -59,5 +59,7 @@ ax.set_xticklabels(layers)
 ax.plot([-0.3,N], [50, 50], 'r--') # chance level cashed line
 ax.legend((rects1[0], rects21[0], rects31[0]), ('vernier', 'crowding 1-3-5', 'uncrowding, 5 shapes'))
 
-plt.ylim(40,100)
-plt.savefig(LOGDIR+'/Shape'+str(i)+'_plot_shorter.png')
+
+plt.savefig(LOGDIR+'/_plots/00Shape'+str(i)+'_plot.png')
+plt.ylim(30,100)
+plt.savefig(LOGDIR+'/_plots/30Shape'+str(i)+'_plot.png')

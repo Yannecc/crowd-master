@@ -436,7 +436,6 @@ class StimMaker:
         n_precedent=0
         for grp in range(4):
             N = ratios[grp]
-
             for n in range(N):
                 n_true = n_precedent + n
                 offset = random.randint(0, 1)
@@ -446,7 +445,7 @@ class StimMaker:
                     img = (img - numpy.mean(img)) / numpy.std(img)
 
                 batchImages[n_true, :, :] = img
-            vernierLabels[n_true] = -offset + 1
+                vernierLabels[n_true] = -offset + 1
 
 
             n_precedent += N
@@ -478,5 +477,5 @@ if __name__ == "__main__":
 
     ratios = [0,0,0,1] #ratios : 0 - vernier alone; 1- shapes alone; 2- Vernier ext; 3-vernier inside shape
     batchSize = 4
-    matrix = []
+    matrix = [1,6,1,6,1]
     rufus.show_Batch(batchSize,ratios, noiseLevel=0.1, normalize=False, fixed_position=None, shapeMatrix = matrix)
