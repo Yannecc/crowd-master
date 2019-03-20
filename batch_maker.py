@@ -272,13 +272,13 @@ class StimMaker:
         critDist     = 0 # int(self.shapeSize/6)
         padDist      = int(self.shapeSize/6)
         shapeMatrix  = numpy.array(shapeMatrix)
-        margin       = 6
+
 
         if len(shapeMatrix.shape) < 2:
             shapeMatrix = numpy.expand_dims(shapeMatrix, axis=0)
 
         if shapeMatrix.all() == None:  # this means we want only a vernier
-            patch = numpy.zeros((self.shapeSize + margin, self.shapeSize + margin))
+            patch = numpy.zeros((self.shapeSize+3, self.shapeSize+3))
         else:
             patch = numpy.zeros((shapeMatrix.shape[0]*self.shapeSize + (shapeMatrix.shape[0]-1)*critDist + 1,
                                  shapeMatrix.shape[1]*self.shapeSize + (shapeMatrix.shape[1]-1)*critDist + 1))
@@ -288,13 +288,14 @@ class StimMaker:
 
                     firstRow = row*(self.shapeSize + critDist)
                     firstCol = col*(self.shapeSize + critDist)
+
                     patch[firstRow:firstRow+self.shapeSize, firstCol:firstCol+self.shapeSize] = self.drawShape(shapeMatrix[row,col], offset, offset_size)
 
         if vernier_in:
 
             firstRow = int((patch.shape[0]-self.shapeSize)/2) # + 1  # small adjustments may be needed depending on precise image size
             firstCol = int((patch.shape[1]-self.shapeSize)/2) # + 1
-            patch[firstRow:firstRow+self.shapeSize, firstCol:firstCol+self.shapeSize] += self.drawVernier(offset, offset_size)
+            patch[firstRow:(firstRow+self.shapeSize), firstCol:firstCol+self.shapeSize] = self.drawVernier(offset, offset_size)
             patch[patch > 1.0] = 1.0
 
         if fixed_position is None:
@@ -347,9 +348,9 @@ class StimMaker:
 
 
 
-    def show_Batch(self, batchSize, ratios, noiseLevel=0.0, normalize=False, fixed_position=None):
+    def show_Batch(self, batchSize, ratios, noiseLevel=0.0, normalize=False, fixed_position=None, shapeMatrix=[]):
         # input a configuration to display
-        batchImages, batchLabels = self.generate_Batch(batchSize, ratios, noiseLevel=noiseLevel, normalize=normalize, fixed_position=fixed_position)
+        batchImages, batchLabels = self.generate_Batch(batchSize, ratios, noiseLevel=noiseLevel, normalize=normalize, fixed_position=fixed_position, shapeMatrix=shapeMatrix)
 
         for n in range(batchSize):
             plt.figure()
@@ -387,24 +388,28 @@ class StimMaker:
         #
         # return batchImages, vernierLabels
 
+    #def testing_Batch(self, batchSize, ratios, noiseLevel=0.0, normalize=False, fixed_position=None):
 
-    def generate_Batch(self, batchSize, ratios, noiseLevel=0.0, normalize=False, fixed_position=None):
 
-        # ratios : 0 - vernier alone; 1- shapes alone; 2- Vernier ext; 3-vernier inside shape
+
+
+    def generate_Batch(self, batchSize, ratios, noiseLevel=0.0, normalize=False, fixed_position=None, shapeMatrix=None):
+
+        # ratios : 0 - vernier alone; 1- shapes alone; 2- Vernier ext; 3-vernier inside random shape; 4- vernier inside shapeMatrix
         # in case ratio didn't fit required size, standard output
         if len(ratios)!= 4:
-            ratios = [.25, .25, .25, .25]
+            ratios = [1., 1., 1., 0.]
 
 
         #  Normalize ratios by batchSize, then manage rounding errors with while
         ratios = [int(float(i)*batchSize / sum(ratios)) for i in ratios]
 
         while sum(ratios) < batchSize:
-            ratios[numpy.random.randint(4)] += 1
+            ratios[0] += 1
 
         # Define attributes of all 3 groups (could be dictionnary)
-        v_map = [[True, False], [False, False], [True, False], [False, True]]
-        shape_map = [[],None, None, None]
+        v_map = ((True, False), (False, False), (True, False),(False, True))
+        shape_map = ([],None, None, shapeMatrix)
 
 
         # Define output
@@ -420,12 +425,12 @@ class StimMaker:
             for n in range(N):
                 n_true = n_precedent + n
                 offset = random.randint(0, 1)
-                batchImages[n_true, :, :] = self.drawStim(vernier_ext=v_map[grp][0], shapeMatrix=shape_map[grp], vernier_in=v_map[grp][1],
+                img = self.drawStim(vernier_ext=v_map[grp][0], shapeMatrix=shape_map[grp], vernier_in=v_map[grp][1],
                                                      fixed_position=fixed_position, offset=offset)
                 if normalize:
-                    batchImages[n_true, :, :] = (batchImages[n, :, :] - numpy.mean(batchImages[n, :, :])) / numpy.std(
-                        batchImages[n_true, :, :])
+                    img = (img - numpy.mean(img)) / numpy.std(img)
 
+                batchImages[n_true, :, :] = img
                 if grp != 1:
                     vernierLabels[n_true] = -offset + 1
                 else:
@@ -445,8 +450,6 @@ class StimMaker:
 
 
 
-
-
 if __name__ == "__main__":
     #
     imgSize = (227, 227)
@@ -459,6 +462,7 @@ if __name__ == "__main__":
     #rufus.showBatch(9, shapes, noiseLevel=0.1, normalize=False, fixed_position=None, random_size=False)
 
 
-    ratios = [1, 1, 1, 1] #ratios : 0 - vernier alone; 1- shapes alone; 2- Vernier ext; 3-vernier inside shape
-    batchSize = 14
-    rufus.show_Batch(batchSize,ratios, noiseLevel=0.1, normalize=False, fixed_position=None)
+    ratios = [0,0,0,1] #ratios : 0 - vernier alone; 1- shapes alone; 2- Vernier ext; 3-vernier inside shape
+    batchSize = 6
+    matrix = []
+    rufus.show_Batch(batchSize,ratios, noiseLevel=0.1, normalize=False, fixed_position=None, shapeMatrix = matrix)

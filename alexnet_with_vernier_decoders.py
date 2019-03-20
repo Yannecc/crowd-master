@@ -21,12 +21,11 @@ def main():
     MODEL_ID = 1
     VERSION = 0
     STIM = 'vernier_and_shapes'
-    training_ratios = [0, 0, 1, 0]  # 0-VernierAlone/1-ShapesAlone/2-VernierExt/3-VernierInside
     N_HIDDEN = 512
-    TRAINING = True
+    TRAINING = False
     save_steps = 1000  # save the model after each save_steps
     batch_size = 64
-    total_n_samples = 100000*batch_size
+    total_n_samples = 100*batch_size
     noise_level = .1
     lr = 1e-6  # learning rate
 
@@ -321,6 +320,11 @@ def main():
     # Training
     ####################################################################################################################
 
+    training_ratios = [0, 0, 1, 0]  # 0-Vernier Alone/ 1-Shapes Alone/ 2-Vernier Ext/ 3-Vernier inside given shapeMatrix, None = random
+
+    #shapeMatrix = [1,1,1]
+
+
     if TRAINING is True:
 
         # training parameters
@@ -395,67 +399,77 @@ def main():
     ####################################################################################################################
     # Testing
     ####################################################################################################################
-
+    SHAPES = [[1], [2], [3], [1, 1, 1], [2, 2, 2], [3, 3, 3], [1, 2, 1], [1, 3, 1], [2, 1, 2], [2, 3, 2], [3, 1, 3],
+              [3, 2, 3],
+              [1, 1, 1, 1, 1], [2, 2, 2, 2, 2], [3, 3, 3, 3, 3], [1, 2, 1, 2, 1], [1, 3, 1, 3, 1], [2, 1, 2, 1, 2],
+              [2, 3, 2, 3, 2], [3, 1, 3, 1, 3], [3, 2, 3, 2, 3]]
+    N_exp = len(SHAPES)
+    results = np.zeros((N_exp, 9))
+    testing_ratios = [0, 0, 0, 1]
 
     if TRAINING is False:
+        for i in range(N_exp):
+            shapeMatrix = SHAPES[i]
+            # testing parameters
+            saver = tf.train.Saver()
+            #saver = tf.train.Saver(var_list=tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='decode_vernier'))
+            summary = tf.summary.merge_all()
 
-        # testing parameters
-        saver = tf.train.Saver()
-        #saver = tf.train.Saver(var_list=tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='decode_vernier'))
-        summary = tf.summary.merge_all()
+            input_maker = StimMaker(imSize=(227, 227), shapeSize=19, barWidth=2)
 
-        input_maker = StimMaker(imSize=(227, 227), shapeSize=19, barWidth=2)
-        testing_ratios = [1, 1, 1, 1]  # 0-VernierAlone/1-ShapesAlone/2-VernierExt/3-VernierInside
+            with tf.Session() as sess:
 
-        with tf.Session() as sess:
+                print('Testing...')
+                writer = tf.summary.FileWriter(LOGDIR+'/'+STIM+'_testing'+str(shapeMatrix), sess.graph)
+                saver.restore(sess, checkpoint_path)
 
-            print('Testing...')
-            writer = tf.summary.FileWriter(LOGDIR+'/'+STIM+'_testing', sess.graph)
-            saver.restore(sess, checkpoint_path)
-
-            # we will collect correct responses here: one entry per vernier decoder
-            correct_responses = np.zeros(shape=(9))
-            # assemble the number of correct responses for each vernier decoder
-            correct_mean_all = tf.stack([correct_mean1, correct_mean2, correct_mean3, correct_mean4, correct_mean5, correct_mean6, correct_mean7,
-                             correct_mean8, correct_mean_prob],axis=0, name='correct_mean_all')
-
-
-            for iteration in range(n_batches):
-
-                # get data in the batches
-                batch_data, batch_labels = input_maker.generate_Batch(batch_size, testing_ratios, noiseLevel=noise_level, normalize=False, fixed_position=None)
+                # we will collect correct responses here: one entry per vernier decoder
+                correct_responses = np.zeros(shape=(9))
+                # assemble the number of correct responses for each vernier decoder
+                correct_mean_all = tf.stack([correct_mean1, correct_mean2, correct_mean3, correct_mean4, correct_mean5, correct_mean6, correct_mean7,
+                                 correct_mean8, correct_mean_prob],axis=0, name='correct_mean_all')
 
 
-                if iteration % 5 == 0:
+                for iteration in range(n_batches):
 
-                    # Run the training operation, measure the losses and write summary:
-                    correct_in_this_batch_all, summ = sess.run(
-                        [correct_mean_all, summary],
-                        feed_dict={x: batch_data,
-                                   y: batch_labels,
-                                       is_training: TRAINING})
-                    writer.add_summary(summ, iteration)
+                    # get data in the batches
+                    batch_data, batch_labels = input_maker.generate_Batch(batch_size, testing_ratios, noiseLevel=noise_level, normalize=False, fixed_position=None, shapeMatrix=shapeMatrix)
 
-                else:
 
-                    # Run the training operation and measure the losses:
-                    correct_in_this_batch_all = sess.run(correct_mean_all,
-                                 feed_dict={x: batch_data,
-                                            y: batch_labels,
-                                            is_training: TRAINING})
+                    if iteration % 5 == 0:
 
-                correct_responses += np.array(correct_in_this_batch_all)
+                        # Run the training operation, measure the losses and write summary:
+                        correct_in_this_batch_all, summ = sess.run(
+                            [correct_mean_all, summary],
+                            feed_dict={x: batch_data,
+                                       y: batch_labels,
+                                           is_training: TRAINING})
+                        writer.add_summary(summ, iteration)
 
-                print("\rIteration: {}/{} ({:.1f}%)".format(
-                    iteration, n_batches,
-                    iteration * 100 / n_batches),
-                    end="")
+                    else:
 
-        percent_correct = correct_responses*100/n_batches
-        print('... testing done.')
-        print('Percent correct for vernier decoders in ascending order: ')
-        print(percent_correct)
-        np.save(LOGDIR+'/'+STIM+'_percent_correct', percent_correct)
+                        # Run the training operation and measure the losses:
+                        correct_in_this_batch_all = sess.run(correct_mean_all,
+                                     feed_dict={x: batch_data,
+                                                y: batch_labels,
+                                                is_training: TRAINING})
+
+                    correct_responses += np.array(correct_in_this_batch_all)
+
+                    print("\rIteration: {}/{} ({:.1f}%)".format(
+                        iteration, n_batches,
+                        iteration * 100 / n_batches),
+                        end="")
+
+            percent_correct = correct_responses*100/n_batches
+            print('... testing done.')
+            print('Percent correct for vernier decoders in ascending order: ')
+            print(percent_correct)
+            np.save(LOGDIR+'/'+STIM+'_percent_correct'+str(shapeMatrix), percent_correct)
+            results[i, :] = percent_correct
+        print(results)
+        np.save(LOGDIR + '/' + STIM + '_results', results)
+
 
     ####################################################################################################################
     # in case we wonder what the output of alexnet itself is.
@@ -559,4 +573,4 @@ def vernier_correct_mean(prediction, label):
 
 
 if __name__=="__main__":
-   main()
+    main()
