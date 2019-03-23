@@ -19,13 +19,13 @@ def main():
 
 
     MODEL_ID = 1
-    VERSION = 0
+    VERSION = 'test'
     STIM = 'vernier_and_shapes'
     N_HIDDEN = 512
     TRAINING = False
     save_steps = 1000  # save the model after each save_steps
     batch_size = 64
-    total_n_samples = 100*batch_size
+    total_n_samples = 10*batch_size
     noise_level = .1
     lr = 1e-6  # learning rate
 

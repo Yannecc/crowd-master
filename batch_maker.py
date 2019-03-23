@@ -121,6 +121,20 @@ class StimMaker:
 
         return patch
 
+    def drawDiamond(self):
+        S = self.shapeSize
+        mid = int(S/2)
+        resizeFactor = 1.00
+        patch = numpy.zeros((S,S))
+        for i in range(S):
+            for j in range(S):
+                if i == mid+j or i == mid-j or j == mid+i or j == 3*mid-i-1:
+                    patch[i,j] = 1
+
+        return patch
+
+
+
 
     def drawPolygon(self, nSides, phi):
 
@@ -263,7 +277,7 @@ class StimMaker:
         if shapeID == 4:
             patch = self.drawPolygon(8, numpy.pi/8)
         if shapeID == 5:
-            patch = self.drawStar(4, 1.8, 0)
+            patch = self.drawDiamond()
         if shapeID == 6:
             patch = self.drawStar(7, 1.7, -numpy.pi/14)
         if shapeID == 7:
@@ -279,8 +293,9 @@ class StimMaker:
     def drawStim(self, vernier_ext, shapeMatrix, vernier_in=False, offset=None, offset_size=None, fixed_position=None):
         if shapeMatrix == None:
             ID = numpy.random.randint(1, 7)
-            siz = numpy.random.randint(3)*2 +1
-            shapeMatrix = numpy.zeros((1,siz)) + ID
+            siz = numpy.random.randint(4)*2 +1
+            h = numpy.random.randint(2)*2 +1
+            shapeMatrix = numpy.zeros((h,siz)) + ID
 
 
         image        = numpy.zeros(self.imSize)
@@ -475,7 +490,7 @@ if __name__ == "__main__":
     #rufus.showBatch(9, shapes, noiseLevel=0.1, normalize=False, fixed_position=None, random_size=False)
 
 
-    ratios = [0,0,0,1] #ratios : 0 - vernier alone; 1- shapes alone; 2- Vernier ext; 3-vernier inside shape
-    batchSize = 4
-    matrix = [1,6,1,6,1]
+    ratios = [0,0,1,0] #ratios : 0 - vernier alone; 1- shapes alone; 2- Vernier ext; 3-vernier inside shape
+    batchSize = 15
+    matrix = [5]
     rufus.show_Batch(batchSize,ratios, noiseLevel=0.1, normalize=False, fixed_position=None, shapeMatrix = matrix)
