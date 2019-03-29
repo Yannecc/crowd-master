@@ -14,7 +14,6 @@ random_pixels = 0  # stimulus pixels are drawn from random.uniform(1-random_pixe
 def all_test_shapes():
     return shapesgen(5)+Lynns_patterns()+ten_random_patterns()
 
-
 def shapesgen(max, emptyvect=True):
     if max>7:
         return
