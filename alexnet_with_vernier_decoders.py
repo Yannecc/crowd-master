@@ -2,7 +2,7 @@
 
 import tensorflow as tf
 from makePatches import createPatches
-from batch_maker import StimMaker, shapesgen
+from batch_maker import StimMaker, all_test_shapes
 import numpy as np
 import os
 import matplotlib
@@ -11,44 +11,41 @@ import matplotlib.pyplot as plt
 from caffe_classes import class_names
 
 
-def main():
+def alexnet(TRAINING, n_batches, version, name):
 
     ####################################################################################################################
     # Model name and logdir. Choose to train or not. Checkpoint for model saving
     ####################################################################################################################
 
-
     MODEL_ID = 1
-    VERSION = 'test'
-    STIM = 'vernier_and_shapes'
+    VERSION = str(version)
+
+    STIM = 'megatest'
     N_HIDDEN = 512
-    TRAINING = False
+    #TRAINING = False
     save_steps = 1000  # save the model after each save_steps
     batch_size = 64
-    total_n_samples = 10*batch_size
+    total_n_samples = n_batches*batch_size
     noise_level = .1
     lr = 1e-6  # learning rate
 
     if N_HIDDEN is None:
-        MODEL_NAME = 'crowd-master' + str(MODEL_ID)
+        MODEL_NAME = name + str(MODEL_ID)
         LOGDIR = MODEL_NAME + '_logdir/version_' + str(VERSION)
     else:
-        MODEL_NAME = 'crowd-master' + str(MODEL_ID)
-        LOGDIR = MODEL_NAME + '_logdir/version_' + str(VERSION) + '_hidden_' + str(N_HIDDEN)
+        MODEL_NAME = name + str(MODEL_ID)
+        LOGDIR = MODEL_NAME + '_logdir/mod_' + str(VERSION) + '_hidden_' + str(N_HIDDEN)
     checkpoint_path = LOGDIR + '/' + MODEL_NAME + '_hidden_' + str(N_HIDDEN) + "_model.ckpt"
-    restore_checkpoint = True
-    continue_training_from_checkpoint = True
 
     if not os.path.exists(LOGDIR):
         os.makedirs(LOGDIR)
+    restore_checkpoint = not TRAINING
+    continue_training_from_checkpoint = False
 
 
     ####################################################################################################################
     # Data handling (we will create data in batches later, during the training/testing)
     ####################################################################################################################
-
-
-    n_batches = total_n_samples//batch_size
 
     # save parameters
     if TRAINING is True:
@@ -91,8 +88,8 @@ def main():
         # tf.summary.histogram('conv1',conv1)
 
     # vernier classifier for this layer
-    with tf.variable_scope('decode_vernier1'):
-        classifier1 = vernier_classifier(conv1, is_training, N_HIDDEN, name='classifier1')
+    with tf.variable_scope('decode_vernier1'+ str(VERSION),reuse=tf.AUTO_REUSE):
+        classifier1 = vernier_classifier(conv1, is_training, N_HIDDEN, name='classifier1'+ VERSION)
         x_entropy1 = vernier_x_entropy(classifier1,y)
         correct_mean1 = vernier_correct_mean(tf.argmax(classifier1, axis=1), y) # match correct prediction to each entry in y
         train_op1 = tf.train.AdamOptimizer(learning_rate=lr).minimize(x_entropy1,
@@ -138,8 +135,8 @@ def main():
         # tf.summary.histogram('conv2',conv2)
 
     # vernier classifier for this layer
-    with tf.variable_scope('decode_vernier2'):
-        classifier2 = vernier_classifier(conv2, is_training, N_HIDDEN, name='classifier2')
+    with tf.variable_scope('decode_vernier2'+ str(VERSION),reuse=tf.AUTO_REUSE):
+        classifier2 = vernier_classifier(conv2, is_training, N_HIDDEN, name='classifier2' + VERSION)
         x_entropy2 = vernier_x_entropy(classifier2,y)
         correct_mean2 = vernier_correct_mean(tf.argmax(classifier2, axis=1), y) # match correct prediction to each entry in y
         train_op2 = tf.train.AdamOptimizer(learning_rate=lr).minimize(x_entropy2,
@@ -185,8 +182,8 @@ def main():
         # tf.summary.histogram('conv3',conv3)
 
     # vernier classifier for this layer
-    with tf.variable_scope('decode_vernier3'):
-        classifier3 = vernier_classifier(conv3, is_training, N_HIDDEN, name='classifier3')
+    with tf.variable_scope('decode_vernier3'+ str(VERSION),reuse=tf.AUTO_REUSE):
+        classifier3 = vernier_classifier(conv3, is_training, N_HIDDEN, name='classifier3'+ VERSION)
         x_entropy3 = vernier_x_entropy(classifier3,y)
         correct_mean3 = vernier_correct_mean(tf.argmax(classifier3, axis=1), y)  # match correct prediction to each entry in y
         train_op3 = tf.train.AdamOptimizer(learning_rate=lr).minimize(x_entropy3,
@@ -209,8 +206,8 @@ def main():
         # tf.summary.histogram('conv4',conv4)
 
     # vernier classifier for this layer
-    with tf.variable_scope('decode_vernier4'):
-        classifier4 = vernier_classifier(conv4, is_training, N_HIDDEN, name='classifier4')
+    with tf.variable_scope('decode_vernier4'+ str(VERSION),reuse=tf.AUTO_REUSE):
+        classifier4 = vernier_classifier(conv4, is_training, N_HIDDEN, name='classifier4' + VERSION)
         x_entropy4 = vernier_x_entropy(classifier4,y)
         correct_mean4 = vernier_correct_mean(tf.argmax(classifier4, axis=1), y)  # match correct prediction to each entry in y
         train_op4 = tf.train.AdamOptimizer(learning_rate=lr).minimize(x_entropy4,
@@ -233,8 +230,8 @@ def main():
         # tf.summary.histogram('conv5', conv5)
 
     # vernier classifier for this layer
-    with tf.variable_scope('decode_vernier5'):
-        classifier5 = vernier_classifier(conv5, is_training, N_HIDDEN, name='classifier5')
+    with tf.variable_scope('decode_vernier5'+ str(VERSION),reuse=tf.AUTO_REUSE):
+        classifier5 = vernier_classifier(conv5, is_training, N_HIDDEN, name='classifier5'+VERSION)
         x_entropy5 = vernier_x_entropy(classifier5,y)
         correct_mean5 = vernier_correct_mean(tf.argmax(classifier5, axis=1), y)  # match correct prediction to each entry in y
         train_op5 = tf.train.AdamOptimizer(learning_rate=lr).minimize(x_entropy5,
@@ -260,8 +257,8 @@ def main():
         # tf.summary.histogram('fc6',fc6)
 
     # vernier classifier for this layer
-    with tf.variable_scope('decode_vernier6'):
-        classifier6 = vernier_classifier(fc6, is_training, N_HIDDEN, name='classifier6')
+    with tf.variable_scope('decode_vernier6'+ str(VERSION),reuse=tf.AUTO_REUSE):
+        classifier6 = vernier_classifier(fc6, is_training, N_HIDDEN, name='classifier6'+VERSION)
         x_entropy6 = vernier_x_entropy(classifier6,y)
         correct_mean6 = vernier_correct_mean(tf.argmax(classifier6, axis=1), y)  # match correct prediction to each entry in y
         train_op6 = tf.train.AdamOptimizer(learning_rate=lr).minimize(x_entropy6,
@@ -277,8 +274,8 @@ def main():
         # tf.summary.histogram('fc7', fc7)
 
     # vernier classifier for this layer
-    with tf.variable_scope('decode_vernier7'):
-        classifier7 = vernier_classifier(fc7, is_training, N_HIDDEN, name='classifier7')
+    with tf.variable_scope('decode_vernier7'+ str(VERSION),reuse=tf.AUTO_REUSE):
+        classifier7 = vernier_classifier(fc7, is_training, N_HIDDEN, name='classifier7' +VERSION)
         x_entropy7 = vernier_x_entropy(classifier7,y)
         correct_mean7 = vernier_correct_mean(tf.argmax(classifier7, axis=1), y)  # match correct prediction to each entry in y
         train_op7 = tf.train.AdamOptimizer(learning_rate=lr).minimize(x_entropy7,
@@ -293,12 +290,12 @@ def main():
         fc8 = tf.nn.xw_plus_b(fc7, fc8W, fc8b)
         # tf.summary.histogram('fc8', fc8)
 
-    with tf.variable_scope('decode_vernier8'):
-        classifier8 = vernier_classifier(fc8, is_training, N_HIDDEN, name='classifier8')
+    with tf.variable_scope('decode_vernier8'+ str(VERSION),reuse=tf.AUTO_REUSE):
+        classifier8 = vernier_classifier(fc8, is_training, N_HIDDEN, name='classifier8'+VERSION)
         x_entropy8 = vernier_x_entropy(classifier8,y)
         correct_mean8 = vernier_correct_mean(tf.argmax(classifier8, axis=1), y)  # match correct prediction to each entry in y
         train_op8 = tf.train.AdamOptimizer(learning_rate=lr).minimize(x_entropy8,
-                                                       var_list=tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='decode_vernier8'),
+                                                       var_list=tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='decode_vernier8' ),
                                                        name="training_op")
 
     # prob
@@ -307,8 +304,8 @@ def main():
         prob = tf.nn.softmax(fc8)
         #tf.summary.histogram('prob',prob)
 
-    with tf.variable_scope('decode_vernier_prob'):
-        classifier_prob = vernier_classifier(prob, is_training, N_HIDDEN, name='classifier_prob')
+    with tf.variable_scope('decode_vernier_prob'+ str(VERSION),reuse=tf.AUTO_REUSE):
+        classifier_prob = vernier_classifier(prob, is_training, N_HIDDEN, name='classifier_prob'+VERSION)
         x_entropy_prob = vernier_x_entropy(classifier_prob,y)
         correct_mean_prob = vernier_correct_mean(tf.argmax(classifier_prob, axis=1), y)  # match correct prediction to each entry in y
         train_op_prob = tf.train.AdamOptimizer(learning_rate=lr).minimize(x_entropy_prob,
@@ -322,7 +319,6 @@ def main():
 
     training_ratios = [0, 0, 1, 0]  # 0-Vernier Alone/ 1-Shapes Alone/ 2-Vernier Ext/ 3-Vernier inside given shapeMatrix, None = random
 
-    #shapeMatrix = [1,1,1]
 
 
     if TRAINING is True:
@@ -387,7 +383,7 @@ def main():
                                        y: batch_labels,
                                        is_training: TRAINING})
 
-                    print("\rIteration: {}/{} ({:.1f}%)".format(
+                    print("\rIteration: {}/{} ({:.1f}%)\n".format(
                         iteration, n_batches,
                         iteration * 100 / n_batches),
                         end="")
@@ -399,26 +395,28 @@ def main():
     ####################################################################################################################
     # Testing
     ####################################################################################################################
-    SHAPES = shapesgen(5)
-    N_exp = len(SHAPES)
-    results = np.zeros((N_exp, 9))
+    SHAPES = [[]]#all_test_shapes()
+    shapeSize = 19
+    N_tests = len(SHAPES)
+
+    results = np.zeros((N_tests, 9))
     testing_ratios = [0, 0, 0, 1]
 
     if TRAINING is False:
-        for i in range(N_exp):
+        for i in range(N_tests):
             shapeMatrix = SHAPES[i]
             # testing parameters
             saver = tf.train.Saver()
             #saver = tf.train.Saver(var_list=tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='decode_vernier'))
             summary = tf.summary.merge_all()
 
-            input_maker = StimMaker(imSize=(227, 227), shapeSize=19, barWidth=2)
+            input_maker = StimMaker(imSize=(227, 227), shapeSize = shapeSize, barWidth=2)
 
             with tf.Session() as sess:
 
                 print('\rTesting...')
                 print('\rshapematrix ={}'.format(str(shapeMatrix)))
-                writer = tf.summary.FileWriter(LOGDIR+'/'+STIM+'_testing'+str(shapeMatrix), sess.graph)
+                writer = tf.summary.FileWriter(LOGDIR+'/'+STIM+'_testing', sess.graph)
                 saver.restore(sess, checkpoint_path)
 
                 # we will collect correct responses here: one entry per vernier decoder
@@ -463,11 +461,12 @@ def main():
             print('... testing done.')
             print('Percent correct for vernier decoders in ascending order: ')
             print(percent_correct)
-            np.save(LOGDIR+'/'+STIM+'_percent_correct'+str(shapeMatrix), percent_correct)
+            np.save(LOGDIR + '/' + STIM  + str(shapeMatrix), percent_correct)
             results[i, :] = percent_correct
-        print(results)
+        print('Finished testing for this model, numpy saving\n'.format())
         np.save(LOGDIR + '/' + STIM + '_results', results)
         np.save(LOGDIR + '/' + STIM + '_SHAPES', SHAPES)
+        return results
 
 
     ####################################################################################################################
@@ -510,7 +509,7 @@ def conv(input, kernel, biases, k_h, k_w, c_o, s_h, s_w, padding="VALID", group=
 
 
 def batch_norm_layer(x, n_out, phase, name='', activation=None):
-    with tf.variable_scope('batch_norm_layer'):
+    with tf.variable_scope('batch_norm_layer', reuse=True):
         h1 = tf.layers.dense(x, n_out, activation=None, name=name)
         h2 = tf.contrib.layers.batch_norm(h1, center=True, scale=True, is_training=phase, scope=name+'bn')
     if activation is None:
@@ -572,4 +571,24 @@ def vernier_correct_mean(prediction, label):
 
 
 if __name__=="__main__":
-    main()
+    NAME = 'crowdmaster'
+
+    TRAINING = True
+    train_n_batches = 100000
+
+    TESTING = False
+    test_n_batches = 100
+    N_models = 10
+
+    N_tests = len(all_test_shapes())
+
+    results = np.zeros((N_models, N_tests, 9))
+
+    for i in range(N_models):
+        print('\nITERATION N°{}/{}'.format(i+1,N_models))
+        tf.reset_default_graph()
+        alexnet(TRAINING, train_n_batches, i, NAME)
+        tf.reset_default_graph()
+        results[i] = alexnet(TESTING, test_n_batches, i, NAME)
+
+    np.save(NAME+'1_logdir/final_results', results)

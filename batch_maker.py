@@ -11,6 +11,10 @@ import math
 
 random_pixels = 0  # stimulus pixels are drawn from random.uniform(1-random_pixels,1+random_pixels). So use 0 for deterministic stimuli.
 
+def all_test_shapes():
+    return shapesgen(5)+Lynns_patterns()+ten_random_patterns()
+
+
 def shapesgen(max, emptyvect=True):
     if max>7:
         return
@@ -26,6 +30,55 @@ def shapesgen(max, emptyvect=True):
                 s += [[i,j,i,j,i]]
 
     return s
+
+def Lynns_patterns():
+    squares = [1, 1, 1, 1, 1, 1, 1]
+    onesquare = [0, 0, 0, 1, 0, 0, 0]
+    S = [squares]
+    for x in [6,2]:
+        line1 = [x,1,x,1,x,1,x]
+        line2 = [1,x,1,x,1,x,1]
+
+        line0 = [x,1,x,0,x,1,x]
+
+        columns = [line1, line1, line1]
+        checker = [line2, line1, line2]
+        if x == 6:
+            special = [1,x,2,x,1,x,1]
+        else:
+            special = [1,x,1,x,6,x,1]
+
+        checker_special = [line2, line1, special]
+
+        irreg = [[1,x,1,x,x,1,1], line1, [1,1,x,x,1,x,1]]
+        cross = [onesquare, line1, onesquare]
+        pompom = [line0, line1, line0]
+
+        S +=[line1, columns, checker, irreg, pompom, cross, checker_special]
+    return S
+
+def ten_random_patterns(newone = False):
+    patterns = numpy.zeros((10, 3, 7),dtype=int)
+    if newone:
+        basis = [0,1,2,6]
+        for pat in range(10):
+            for row in range(3):
+                for col in range(7):
+                    a = numpy.random.choice(basis)
+                    patterns[pat][row][col] = a
+    else:
+        patterns = [[[6, 1, 1, 0, 1, 6, 2], [0, 1, 0, 1, 2, 1, 1], [1, 0, 1, 6, 6, 2, 6]],
+                    [[1, 6, 1, 1, 2, 0, 2], [6, 2, 2, 6, 0, 1, 2], [1, 1, 0, 6, 1, 1, 1]],
+                    [[1, 6, 1, 2, 2, 0, 2], [1, 0, 6, 1, 2, 2, 6], [2, 2, 0, 1, 0, 2, 1]],
+                    [[6, 6, 0, 1, 1, 6, 6], [1, 1, 1, 2, 2, 6, 1], [6, 6, 2, 1, 6, 0, 6]],
+                    [[0, 6, 2, 2, 2, 6, 6], [2, 0, 1, 1, 6, 6, 6], [1, 0, 6, 0, 2, 6, 2]],
+                    [[2, 1, 1, 6, 2, 6, 2], [6, 1, 0, 6, 1, 2, 1], [1, 6, 0, 2, 1, 2, 6]],
+                    [[1, 1, 0, 6, 6, 6, 1], [1, 0, 0, 1, 2, 1, 1], [2, 1, 0, 2, 6, 1, 6]],
+                    [[0, 6, 6, 2, 2, 0, 2], [1, 6, 1, 6, 6, 2, 2], [2, 1, 6, 1, 0, 2, 2]],
+                    [[6, 1, 2, 6, 1, 0, 1], [0, 1, 6, 2, 0, 6, 2], [1, 0, 1, 2, 6, 6, 6]],
+                    [[1, 0, 1, 6, 2, 6, 2], [0, 6, 6, 2, 0, 1, 1], [6, 6, 1, 6, 0, 2, 1]]]
+        return patterns
+
 
 def clipped_zoom(img, zoom_factor, **kwargs):
 
@@ -267,7 +320,7 @@ class StimMaker:
     def drawShape(self, shapeID, offset=None, offset_size=None):
 
         if shapeID == 0:
-            patch = self.drawVernier(offset, offset_size)
+            patch = numpy.zeros((self.shapeSize, self.shapeSize))
         if shapeID == 1:
             patch = self.drawSquare()
         if shapeID == 2:
@@ -484,13 +537,14 @@ if __name__ == "__main__":
     barWidth = 1
     rufus = StimMaker(imgSize, shapeSize, barWidth)
 
-    print(shapesgen(5, False))
 
     # rufus.plotStim(1, [[1, 2, 3], [4, 5, 6], [6, 7, 0]])
     #rufus.showBatch(9, shapes, noiseLevel=0.1, normalize=False, fixed_position=None, random_size=False)
 
 
-    ratios = [0,0,1,0] #ratios : 0 - vernier alone; 1- shapes alone; 2- Vernier ext; 3-vernier inside shape
-    batchSize = 15
-    matrix = [5]
-    rufus.show_Batch(batchSize,ratios, noiseLevel=0.1, normalize=False, fixed_position=None, shapeMatrix = matrix)
+    ratios = [0,0,0,1] #ratios : 0 - vernier alone; 1- shapes alone; 2- Vernier ext; 3-vernier inside shape
+    batchSize = 1
+    t = ten_random_patterns()
+    print(len(all_test_shapes()))
+    #for matrix in t:
+        #rufus.show_Batch(batchSize,ratios, noiseLevel=0.1, normalize=False, fixed_position=None, shapeMatrix = matrix)

@@ -27,16 +27,16 @@ def main():
                     tf.reset_default_graph()
                     run_alexcrowd_session(MODEL_ID=MODEL_ID, VERSION=run, STIM=STIM, N_HIDDEN=N_HIDDEN,
                                           TRAINING=TRAINING, resize_factor=resize_factor, batch_size=batch_size,
-                                          total_n_samples=2000*batch_size, scope=(str(run)+'_'+STIM+'_'+str(TRAINING)))
+                                          total_n_samples=2*batch_size, scape=(str(run)+'_'+STIM+'_'+str(TRAINING)))
             else:
                 TRAINING = False
                 tf.reset_default_graph()
                 run_alexcrowd_session(MODEL_ID=MODEL_ID, VERSION=run, STIM=STIM, N_HIDDEN=N_HIDDEN,
                                       TRAINING=TRAINING, resize_factor=resize_factor, batch_size=batch_size,
-                                      total_n_samples=3000, scope=(str(run)+'_'+STIM+'_'+str(TRAINING)))
+                                      total_n_samples=3000, scape=(str(run)+'_'+STIM+'_'+str(TRAINING)))
 
 
-def run_alexcrowd_session(MODEL_ID, VERSION, STIM, N_HIDDEN, TRAINING, resize_factor, batch_size, total_n_samples, scope):
+def run_alexcrowd_session(MODEL_ID, VERSION, STIM, N_HIDDEN, TRAINING, resize_factor, batch_size, total_n_samples, scape):
 
     ####################################################################################################################
     # Model name and logdir. Choose to train or not. Checkpoint for model saving
